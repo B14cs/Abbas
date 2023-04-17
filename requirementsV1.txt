@@ -1,0 +1,4 @@
+requests
+jsonlib-python3
+os-sys
+threaded

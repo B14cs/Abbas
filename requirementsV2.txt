@@ -1,0 +1,5 @@
+openai
+os-sys
+glob2
+python-telegram-bot
+pydub
