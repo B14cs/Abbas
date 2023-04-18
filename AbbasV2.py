@@ -22,6 +22,9 @@ logging.basicConfig(
 telegram_token = ''
 openai.api_key = ''
 
+gpt_model = 'gpt-3.5-turbo'
+speech_recognition_model = 'whisper-1'
+
 messages_list = []
 
 
@@ -59,10 +62,8 @@ async def process_audio_message(update: Update, context: ContextTypes.DEFAULT_TY
     append_history(response, "assistant")
     await context.bot.send_message(chat_id=update.effective_chat.id, text=response)
 
-    # Get a list of all the file paths that ends with .txt from in specified directory
     fileList = glob.glob('*.oga')
     fileList2 = glob.glob('*.wav')
-    # Iterate over the list of filepaths & remove each file.
     for filePath, filePath2 in zip(fileList, fileList2):
         try:
             os.remove(filePath)
@@ -70,41 +71,17 @@ async def process_audio_message(update: Update, context: ContextTypes.DEFAULT_TY
         except:
             print("Error while deleting file : ", filePath)
 
-    # os.remove('*.oga')
-    # os.remove('*.wav')
-
-
-listOfNames = ["\"مساعد\"", "\"`ذكي`\"", "\"محادث\"", "\"مساعد\" أو \"ذكي\" أو \"محادث\""]
-listOfNamesEN = ["\"OpenAI\"", "\"AI assistant\"", "OpenAI", "\'AI\'"]
-
 
 def generate_gpt_response():
     completion = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo", messages=messages_list)
-
-    result = completion.choices[0].message["content"]
-
-
-    if "created by" in result:
-        result = result.replace("OpenAI", "@B14_cs")
-    if "تم إنشاؤي" in result:
-        result = result.replace("OpenAI", "@B14_cs")
-    if "name" in result:
-        for substring in listOfNamesEN:
-            if substring in result:
-                result = result.replace(substring, "Abbas")
-    elif "اسم" in result:
-        for substring in listOfNames:
-            if substring in result:
-                result = result.replace(substring, "عباس")
-
-    return result
+        model=gpt_model, messages=messages_list)
+    return completion.choices[0].message["content"]
 
 
 async def get_audio_transcription(update, context):
     new_file = await download_audio(update, context)
     voice = convert_audio_to_wav(new_file)
-    transcript = openai.Audio.transcribe("whisper-1", voice)
+    transcript = openai.Audio.transcribe(speech_recognition_model, voice)
     return transcript["text"]
 
 
@@ -127,8 +104,6 @@ def convert_audio_to_wav(audio_file):
     with open(f"{audio_file}.oga", "rb") as f:
         voice = AudioSegment.from_ogg(f)
     voice_wav = voice.export(f"{audio_file}.wav", format="wav")
-    # os.remove(audio_file + ".wav")
-    # os.remove(audio_file + ".oga")
     return voice_wav
 
 
